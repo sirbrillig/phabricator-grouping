@@ -10,6 +10,7 @@
 
 (function() {
     'use strict';
+    let collapsedState = false;
     function getRevisionFromNotificationNode(node) {
         const idNode = node.querySelector('.phui-handle:nth-of-type(2)');
         return idNode ? idNode.getAttribute('href') : null;
@@ -96,13 +97,8 @@
     function expandNotifications(notes) {
         return notes.map(expandNote);
     }
-    function areNotesCollapsed(notes) {
-        return notes.reduce((areCollapsed, note) => {
-            return areCollapsed || note.collapsed;
-        }, false);
-    }
     function toggleCollapsedNotes(notes) {
-        if (areNotesCollapsed(notes)) {
+        if (getCollapsedState()) {
             return expandNotifications(notes);
         }
         return collapseNotificationsByRevision(notes);
@@ -128,10 +124,11 @@
         try {
             return localStorage.getItem('phabricator-notification-grouping-is-collapsed') === 'true' || false;
         } catch (err) {
-            return false;
+            return collapsedState; // NOTE: module global variable
         }
     }
     function setCollapsedState(isCollapsed) {
+        collapsedState = isCollapsed; // NOTE: module global variable
         try {
             localStorage.setItem('phabricator-notification-grouping-is-collapsed', isCollapsed);
         } catch (err) {
@@ -141,12 +138,12 @@
     let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
     button.addEventListener('click', () => {
+        setCollapsedState(! getCollapsedState());
         notes = toggleCollapsedNotes(notes);
-        setCollapsedState(areNotesCollapsed(notes));
-        toggleCollapsedButton(button, areNotesCollapsed(notes));
+        toggleCollapsedButton(button, getCollapsedState());
     });
     if (getCollapsedState()) {
         notes = toggleCollapsedNotes(notes);
-        toggleCollapsedButton(button, areNotesCollapsed(notes));
+        toggleCollapsedButton(button, getCollapsedState());
     }
 })();
