@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Phabricator Notification Grouping
 // @namespace    https://github.com/sirbrillig/phabricator-grouping
-// @version      1.0
+// @version      1.0.1
 // @description  Allows collapsing Phabricator notifications to one-per-revision
 // @author       Payton Swick <payton@foolord.com>
 // @match        https://code.a8c.com/notification/*
