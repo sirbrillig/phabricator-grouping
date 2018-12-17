@@ -1,0 +1,27 @@
+{
+  "name": "phabricator-grouping",
+  "version": "1.0.0",
+  "description": "A Tampermonkey script for collapsing Phabricator notifications to one-per-revision",
+  "main": "phabricator-grouping.user.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sirbrillig/phabricator-grouping.git"
+  },
+  "keywords": [
+    "phabricator",
+    "tampermonkey",
+    "greasemonkey"
+  ],
+  "author": "Payton Swick <payton@foolord.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sirbrillig/phabricator-grouping/issues"
+  },
+  "homepage": "https://github.com/sirbrillig/phabricator-grouping#readme",
+  "devDependencies": {
+    "eslint": "^5.10.0"
+  }
+}
