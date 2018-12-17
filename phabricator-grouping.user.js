@@ -97,8 +97,8 @@
     function expandNotifications(notes) {
         return notes.map(expandNote);
     }
-    function toggleCollapsedNotes(notes) {
-        if (getCollapsedState()) {
+    function toggleCollapsedNotes(notes, shouldCollapse) {
+        if (! shouldCollapse) {
             return expandNotifications(notes);
         }
         return collapseNotificationsByRevision(notes);
@@ -139,11 +139,11 @@
     const button = addCollapseToggleButton();
     button.addEventListener('click', () => {
         setCollapsedState(! getCollapsedState());
-        notes = toggleCollapsedNotes(notes);
+        notes = toggleCollapsedNotes(notes, getCollapsedState());
         toggleCollapsedButton(button, getCollapsedState());
     });
     if (getCollapsedState()) {
-        notes = toggleCollapsedNotes(notes);
+        notes = toggleCollapsedNotes(notes, getCollapsedState());
         toggleCollapsedButton(button, getCollapsedState());
     }
 })();
