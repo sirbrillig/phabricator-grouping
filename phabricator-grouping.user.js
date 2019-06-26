@@ -11,10 +11,12 @@
 (function() {
     'use strict';
     let collapsedState = false;
+    let reloadOnUpdate = false;
     function getRevisionFromNotificationNode(node) {
         const idNode = node.querySelector('.phui-handle:nth-of-type(2)');
         return idNode ? idNode.getAttribute('href') : null;
     }
+
     function createNoteFromNotificationNode(node) {
         return {
             node,
@@ -28,6 +30,7 @@
             },
         };
     }
+
     function groupNotesById(notes) {
         return notes.reduce((grouped, note) => {
             if (! note.id) {
@@ -40,13 +43,16 @@
             return grouped;
         }, {});
     }
+
     function changeNoteStyle(note, key, value) {
         note.styleCopy[key] = note.node.style[key];
         note.node.style[key] = value;
     }
+
     function restoreNoteStyle(note, key) {
         note.node.style[key] = note.styleCopy[key];
     }
+
     function addCollapsedMarkerToNode(node) {
         const collapsedMarker = document.createElement('div');
         collapsedMarker.innerText = '⇥ ';
@@ -56,12 +62,14 @@
         collapsedMarker.className = 'phabricator-notification-grouping-collapsed';
         node.insertBefore(collapsedMarker, node.firstChild);
     }
+
     function removeCollapsedMarkerFromNode(node) {
         const collapsedMarker = node.querySelector('.phabricator-notification-grouping-collapsed');
         if (collapsedMarker) {
             node.removeChild(collapsedMarker);
         }
     }
+
     function collapseNote(note) {
         changeNoteStyle(note, 'maxHeight', 0);
         changeNoteStyle(note, 'overflow', 'hidden');
@@ -70,6 +78,7 @@
         note.collapsed = true;
         return note;
     }
+
     function expandNote(note) {
         restoreNoteStyle(note, 'maxHeight');
         restoreNoteStyle(note, 'overflow');
@@ -79,6 +88,7 @@
         note.collapsed = false;
         return note;
     }
+
     function collapseNoteGroup(notes) {
         if (notes.length < 2) {
             return notes;
@@ -89,20 +99,24 @@
             notes.slice(1).map(collapseNote),
         ];
     }
+
     function collapseNotificationsByRevision(notes) {
         const groups = groupNotesById(notes);
         Object.values(groups).map(group => collapseNoteGroup(group.notes));
         return notes;
     }
+
     function expandNotifications(notes) {
         return notes.map(expandNote);
     }
+
     function toggleCollapsedNotes(notes, shouldCollapse) {
         if (! shouldCollapse) {
             return expandNotifications(notes);
         }
         return collapseNotificationsByRevision(notes);
     }
+
     function addCollapseToggleButton() {
         const button = document.createElement('a');
         button.className = 'button button-grey has-text phui-button-default msl phui-header-action-link';
@@ -117,9 +131,11 @@
         }
         return button;
     }
+
     function toggleCollapsedButton(button, isCollapsed) {
         button.querySelector('.phui-button-text').innerText = isCollapsed ? 'Expand Notifications' : 'Group Notifications';
     }
+
     function getCollapsedState() {
         try {
             return localStorage.getItem('phabricator-notification-grouping-is-collapsed') === 'true' || false;
@@ -127,6 +143,7 @@
             return collapsedState; // NOTE: module global variable
         }
     }
+
     function setCollapsedState(isCollapsed) {
         collapsedState = isCollapsed; // NOTE: module global variable
         try {
@@ -134,6 +151,44 @@
         } catch (err) {
         }
     }
+
+    function toggleReloadBox(button, isReloading) {
+        button.checked = isReloading;
+    }
+
+    function getReloadState() {
+        try {
+            return localStorage.getItem('phabricator-notification-grouping-is-reloading') === 'true' || false;
+        } catch (err) {
+            return reloadOnUpdate; // NOTE: module global variable
+        }
+    }
+
+    function setReloadState(isReloading) {
+        reloadOnUpdate = isReloading; // NOTE: module global variable
+        try {
+            localStorage.setItem('phabricator-notification-grouping-is-reloading', isReloading);
+        } catch (err) {
+        }
+    }
+
+    function addReloadCheckbox() {
+        const button = document.createElement('input');
+        button.className = '';
+        button.id = 'reload-checkbox';
+        button.type = 'checkbox';
+        const buttonTitle = document.createElement('label');
+        buttonTitle.className = '';
+        buttonTitle.for = 'reload-checkbox';
+        buttonTitle.innerText = 'Reload on Update';
+        const buttonArea = document.querySelector('.phui-header-action-links');
+        if (buttonArea) {
+            buttonArea.appendChild(buttonTitle);
+            buttonArea.appendChild(button);
+        }
+        return button;
+    }
+
     // ------- Main Program -------
     let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
@@ -145,5 +200,13 @@
     if (getCollapsedState()) {
         notes = toggleCollapsedNotes(notes, getCollapsedState());
         toggleCollapsedButton(button, getCollapsedState());
+    }
+
+    const reloadCheckbox = addReloadCheckbox();
+    reloadCheckbox.addEventListener('change', () => {
+        setReloadState(! getReloadState());
+    });
+    if (getReloadState()) {
+        toggleReloadBox(reloadCheckbox, getReloadState());
     }
 })();
