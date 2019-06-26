@@ -206,6 +206,11 @@
         observer.observe(count, config);
     }
 
+    function watchNoteClicks(callback) {
+        const links = document.querySelectorAll('.phabricator-notification-unread');
+        links.forEach(link => link.addEventListener('click', callback));
+    }
+
     // ------- Main Program -------
     let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
@@ -231,5 +236,9 @@
             waitThenReload();
         }
     });
-
+    watchNoteClicks(() => {
+        if (getReloadState()) {
+            waitThenReload();
+        }
+    });
 })();
