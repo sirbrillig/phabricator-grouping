@@ -173,18 +173,19 @@
     }
 
     function addReloadCheckbox() {
+        const area = document.createElement('div');
+        area.className = 'reload-checkbox-area';
         const button = document.createElement('input');
-        button.className = '';
         button.id = 'reload-checkbox';
         button.type = 'checkbox';
         const buttonTitle = document.createElement('label');
-        buttonTitle.className = '';
         buttonTitle.for = 'reload-checkbox';
         buttonTitle.innerText = 'Reload on Update';
         const buttonArea = document.querySelector('.phui-header-action-links');
+        area.appendChild(buttonTitle);
+        area.appendChild(button);
         if (buttonArea) {
-            buttonArea.appendChild(buttonTitle);
-            buttonArea.appendChild(button);
+            buttonArea.appendChild(area);
         }
         return button;
     }
@@ -211,7 +212,26 @@
         links.forEach(link => link.addEventListener('click', callback));
     }
 
+    function addStyles() {
+        const styles = `
+.reload-checkbox-area {
+    display: inline-flex;
+    height: 2em;
+    margin: 4px;
+    align-items: center;
+}
+
+.reload-checkbox-area label {
+    padding: 0.2em;
+}
+        `;
+        const styleTag = document.createElement('style');
+        styleTag.innerText = styles;
+        document.body.appendChild(styleTag);
+    }
+
     // ------- Main Program -------
+    addStyles();
     let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
     button.addEventListener('click', () => {
