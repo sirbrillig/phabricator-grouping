@@ -15,3 +15,5 @@ I finally realized that a simple solution might be just what I needed and I crea
 With this script, if you have 80 notifications for three different Revisions, you’ll only see 3 links instead of 80. The script does this only when you toggle the grouping via a “Group Notifications” button added the page, and it remembers your choice for the next time you load it.
 
 ![Image of Notifications Grouped by Revision](images/phabricator-notifications-grouped-blur.png)
+
+The script also adds a checkbox that will allow reloading of the page when a new notification appears (assuming you have push notifications enabled in Phabricator) or when clicking on a notification. This will help keep the list up-to-date.
