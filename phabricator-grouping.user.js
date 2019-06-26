@@ -189,6 +189,23 @@
         return button;
     }
 
+    function waitThenReload() {
+        setTimeout(() => window.location.reload(), 1000);
+    }
+
+    function watchAlertCount(callback) {
+        const count = document.querySelector('.phabricator-main-menu-alert-count');
+        if (! count) {
+            return;
+        }
+        const config = {
+            attributes: true,
+            childList: true,
+        };
+        const observer = new MutationObserver(callback);
+        observer.observe(count, config);
+    }
+
     // ------- Main Program -------
     let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
@@ -209,4 +226,10 @@
     if (getReloadState()) {
         toggleReloadBox(reloadCheckbox, getReloadState());
     }
+    watchAlertCount(() => {
+        if (getReloadState()) {
+            waitThenReload();
+        }
+    });
+
 })();
