@@ -194,16 +194,30 @@
         setTimeout(() => window.location.reload(), 1000);
     }
 
-    function watchAlertCount(callback) {
-        const count = document.querySelector('.phabricator-main-menu-alert-count');
+    function getAlertCountElement() {
+        return document.querySelector('.phabricator-main-menu-alert-count');
+    }
+
+    function getAlertCount() {
+        const count = getAlertCountElement();
         if (! count) {
+            console.error('Cannot find alert count');
+            return 0;
+        }
+        return count.innerText;
+    }
+
+    function watchAlertCount(callback) {
+        const count = getAlertCountElement();
+        if (! count) {
+            console.error('Cannot find alert count to monitor');
             return;
         }
         const config = {
             attributes: true,
             childList: true,
         };
-        const observer = new MutationObserver(callback);
+        const observer = new MutationObserver(() => callback(count));
         observer.observe(count, config);
     }
 
@@ -251,13 +265,20 @@
     if (getReloadState()) {
         toggleReloadBox(reloadCheckbox, getReloadState());
     }
+    let lastAlertCount = getAlertCount();
     watchAlertCount(() => {
-        if (getReloadState()) {
+        const alertCount = getAlertCount();
+        if (alertCount !== lastAlertCount && getReloadState()) {
+            console.log(`Alert count changed from ${lastAlertCount} to ${alertCount}; reloading page`);
+            lastAlertCount = alertCount;
             waitThenReload();
+            return;
         }
+        console.log(`Alert count updated (last count ${lastAlertCount}, new count ${alertCount}) but not reloading`);
     });
     watchNoteClicks(() => {
         if (getReloadState()) {
+            console.log('Clicked notice; reloading page');
             waitThenReload();
         }
     });
