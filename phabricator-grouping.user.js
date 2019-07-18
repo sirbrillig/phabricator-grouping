@@ -226,6 +226,22 @@
         links.forEach(link => link.addEventListener('click', callback));
     }
 
+    function toggleCollapsedAlertCount(collapsedNoteCount, isCollapsed) {
+        let countElement = document.querySelector('.phabricator-notification-grouping-grouped-alert-count');
+        const countElementExists = Boolean(countElement);
+        if (! countElementExists) {
+            countElement = document.createElement('span');
+            const container = document.querySelector('.phui-profile-header .phui-header-header');
+            if (! container) {
+                console.error('Cannot find container for collapsed alert count');
+                return;
+            }
+            container.appendChild(countElement);
+        }
+        countElement.innerText = `(${collapsedNoteCount})`;
+        countElement.className = isCollapsed ? 'phabricator-notification-grouping-grouped-alert-count' : 'phabricator-notification-grouping-grouped-alert-count--hidden';
+    }
+
     function addStyles() {
         const styles = `
 .reload-checkbox-area {
@@ -237,6 +253,14 @@
 
 .reload-checkbox-area label {
     padding: 0.2em;
+}
+
+.phabricator-notification-grouping-grouped-alert-count {
+    padding: 0.3em;
+}
+
+.phabricator-notification-grouping-grouped-alert-count--hidden {
+    display: none;
 }
         `;
         const styleTag = document.createElement('style');
@@ -252,10 +276,12 @@
         setCollapsedState(! getCollapsedState());
         notes = toggleCollapsedNotes(notes, getCollapsedState());
         toggleCollapsedButton(button, getCollapsedState());
+        toggleCollapsedAlertCount(notes.filter(note => ! note.collapsed).length, getCollapsedState());
     });
     if (getCollapsedState()) {
         notes = toggleCollapsedNotes(notes, getCollapsedState());
         toggleCollapsedButton(button, getCollapsedState());
+        toggleCollapsedAlertCount(notes.filter(note => ! note.collapsed).length, getCollapsedState());
     }
 
     const reloadCheckbox = addReloadCheckbox();
