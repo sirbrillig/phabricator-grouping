@@ -270,7 +270,7 @@
 
     // ------- Main Program -------
     addStyles();
-    let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
+    let notes = Array.from(document.querySelectorAll('.phabricator-notification:not(.no-notifications)')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
     button.addEventListener('click', () => {
         setCollapsedState(! getCollapsedState());
