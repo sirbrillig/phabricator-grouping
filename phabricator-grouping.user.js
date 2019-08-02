@@ -223,7 +223,8 @@
 
     function watchNoteClicks(callback) {
         const links = document.querySelectorAll('.phabricator-notification-unread');
-        links.forEach(link => link.addEventListener('click', callback));
+        const handleClick = event => event.metaKey && callback();
+        links.forEach(link => link.addEventListener('click', handleClick));
     }
 
     function toggleCollapsedAlertCount(collapsedNoteCount, isCollapsed) {
@@ -275,11 +276,13 @@
     button.addEventListener('click', () => {
         setCollapsedState(! getCollapsedState());
         notes = toggleCollapsedNotes(notes, getCollapsedState());
+        console.log('Current status of notes', notes);
         toggleCollapsedButton(button, getCollapsedState());
         toggleCollapsedAlertCount(notes.filter(note => ! note.collapsed).length, getCollapsedState());
     });
     if (getCollapsedState()) {
         notes = toggleCollapsedNotes(notes, getCollapsedState());
+        console.log('Current status of notes', notes);
         toggleCollapsedButton(button, getCollapsedState());
         toggleCollapsedAlertCount(notes.filter(note => ! note.collapsed).length, getCollapsedState());
     }
