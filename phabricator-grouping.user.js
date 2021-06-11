@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Phabricator Notification Grouping
 // @namespace    https://github.com/sirbrillig/phabricator-grouping
-// @version      1.1.0
+// @version      1.2.0
 // @description  Allows collapsing Phabricator notifications to one-per-revision
 // @author       Payton Swick <payton@foolord.com>
 // @match        https://code.a8c.com/notification/*
@@ -194,22 +194,53 @@
         setTimeout(() => window.location.reload(), 1000);
     }
 
-    function watchAlertCount(callback) {
-        const count = document.querySelector('.phabricator-main-menu-alert-count');
+    function getAlertCountElement() {
+        return document.querySelector('.phabricator-main-menu-alert-count');
+    }
+
+    function getAlertCount() {
+        const count = getAlertCountElement();
         if (! count) {
+            console.error('Cannot find alert count');
+            return 0;
+        }
+        return count.innerText;
+    }
+
+    function watchAlertCount(callback) {
+        const count = getAlertCountElement();
+        if (! count) {
+            console.error('Cannot find alert count to monitor');
             return;
         }
         const config = {
             attributes: true,
             childList: true,
         };
-        const observer = new MutationObserver(callback);
+        const observer = new MutationObserver(() => callback(count));
         observer.observe(count, config);
     }
 
     function watchNoteClicks(callback) {
         const links = document.querySelectorAll('.phabricator-notification-unread');
-        links.forEach(link => link.addEventListener('click', callback));
+        const handleClick = event => event.metaKey && callback();
+        links.forEach(link => link.addEventListener('click', handleClick));
+    }
+
+    function toggleCollapsedAlertCount(collapsedNoteCount, isCollapsed) {
+        let countElement = document.querySelector('.phabricator-notification-grouping-grouped-alert-count');
+        const countElementExists = Boolean(countElement);
+        if (! countElementExists) {
+            countElement = document.createElement('span');
+            const container = document.querySelector('.phui-profile-header .phui-header-header');
+            if (! container) {
+                console.error('Cannot find container for collapsed alert count');
+                return;
+            }
+            container.appendChild(countElement);
+        }
+        countElement.innerText = `(${collapsedNoteCount})`;
+        countElement.className = isCollapsed ? 'phabricator-notification-grouping-grouped-alert-count' : 'phabricator-notification-grouping-grouped-alert-count--hidden';
     }
 
     function addStyles() {
@@ -224,6 +255,14 @@
 .reload-checkbox-area label {
     padding: 0.2em;
 }
+
+.phabricator-notification-grouping-grouped-alert-count {
+    padding: 0.3em;
+}
+
+.phabricator-notification-grouping-grouped-alert-count--hidden {
+    display: none;
+}
         `;
         const styleTag = document.createElement('style');
         styleTag.innerText = styles;
@@ -232,16 +271,20 @@
 
     // ------- Main Program -------
     addStyles();
-    let notes = Array.from(document.querySelectorAll('.phabricator-notification')).map(createNoteFromNotificationNode);
+    let notes = Array.from(document.querySelectorAll('.phabricator-notification:not(.no-notifications)')).map(createNoteFromNotificationNode);
     const button = addCollapseToggleButton();
     button.addEventListener('click', () => {
         setCollapsedState(! getCollapsedState());
         notes = toggleCollapsedNotes(notes, getCollapsedState());
+        console.log('Current status of notes', notes);
         toggleCollapsedButton(button, getCollapsedState());
+        toggleCollapsedAlertCount(notes.filter(note => ! note.collapsed).length, getCollapsedState());
     });
     if (getCollapsedState()) {
         notes = toggleCollapsedNotes(notes, getCollapsedState());
+        console.log('Current status of notes', notes);
         toggleCollapsedButton(button, getCollapsedState());
+        toggleCollapsedAlertCount(notes.filter(note => ! note.collapsed).length, getCollapsedState());
     }
 
     const reloadCheckbox = addReloadCheckbox();
@@ -251,13 +294,20 @@
     if (getReloadState()) {
         toggleReloadBox(reloadCheckbox, getReloadState());
     }
+    let lastAlertCount = getAlertCount();
     watchAlertCount(() => {
-        if (getReloadState()) {
+        const alertCount = getAlertCount();
+        if (alertCount !== lastAlertCount && getReloadState()) {
+            console.log(`Alert count changed from ${lastAlertCount} to ${alertCount}; reloading page`);
+            lastAlertCount = alertCount;
             waitThenReload();
+            return;
         }
+        console.log(`Alert count updated (last count ${lastAlertCount}, new count ${alertCount}) but not reloading`);
     });
     watchNoteClicks(() => {
         if (getReloadState()) {
+            console.log('Clicked notice; reloading page');
             waitThenReload();
         }
     });
