@@ -243,6 +243,15 @@
         countElement.className = isCollapsed ? 'phabricator-notification-grouping-grouped-alert-count' : 'phabricator-notification-grouping-grouped-alert-count--hidden';
     }
 
+    function watchRefocus(callback) {
+        window.addEventListener('visibilitychange', callback);
+        window.addEventListener('focus', callback);
+    }
+
+    function watchNetwork(callback) {
+        window.addEventListener('online', callback);
+    }
+
     function addStyles() {
         const styles = `
 .reload-checkbox-area {
@@ -308,6 +317,16 @@
     watchNoteClicks(() => {
         if (getReloadState()) {
             console.log('Clicked notice; reloading page');
+            waitThenReload();
+        }
+    });
+    watchRefocus(() => {
+        if (getReloadState()) {
+            waitThenReload();
+        }
+    });
+    watchNetwork(() => {
+        if (getReloadState()) {
             waitThenReload();
         }
     });
