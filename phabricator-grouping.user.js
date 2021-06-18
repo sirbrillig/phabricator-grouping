@@ -12,6 +12,7 @@
     'use strict';
     let collapsedState = false;
     let reloadOnUpdate = false;
+    const lastAutoRefreshKey = 'phabricator-grouping-user-last-auto-refresh';
     function getRevisionFromNotificationNode(node) {
         const idNode = node.querySelector('.phui-handle:nth-of-type(2)');
         return idNode ? idNode.getAttribute('href') : null;
@@ -278,6 +279,29 @@
         document.body.appendChild(styleTag);
     }
 
+    function getLastAutoRefreshTime() {
+        return window.localStorage.getItem(lastAutoRefreshKey);
+    }
+
+    function setLastAutoRefreshTime() {
+        window.localStorage.setItem(lastAutoRefreshKey, Date.now());
+    }
+
+    function shouldAutoRefreshOnFocus() {
+        const lastAutoRefreshTime = getLastAutoRefreshTime();
+        if (! lastAutoRefreshTime) {
+            return true;
+        }
+        const now = Date.now();
+        const msSinceRefresh = now - lastAutoRefreshTime;
+        const oneMinuteInMs = 60000;
+        const minMsBeforeRefresh = oneMinuteInMs * 2;
+        if (msSinceRefresh > minMsBeforeRefresh) {
+            return true;
+        }
+        return false;
+    }
+
     // ------- Main Program -------
     addStyles();
     let notes = Array.from(document.querySelectorAll('.phabricator-notification:not(.no-notifications)')).map(createNoteFromNotificationNode);
@@ -321,7 +345,8 @@
         }
     });
     watchRefocus(() => {
-        if (getReloadState()) {
+        if (getReloadState() && shouldAutoRefreshOnFocus()) {
+            setLastAutoRefreshTime();
             waitThenReload();
         }
     });
