@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Phabricator Notification Grouping
 // @namespace    https://github.com/sirbrillig/phabricator-grouping
-// @version      1.3.1
+// @version      1.3.2
 // @description  Allows collapsing Phabricator notifications to one-per-revision
 // @author       Payton Swick <payton@foolord.com>
 // @match        https://code.a8c.com/notification/*
@@ -302,6 +302,10 @@
         return false;
     }
 
+    function isOffline() {
+        return ! window.navigator.onLine;
+    }
+
     // ------- Main Program -------
     addStyles();
     let notes = Array.from(document.querySelectorAll('.phabricator-notification:not(.no-notifications)')).map(createNoteFromNotificationNode);
@@ -345,13 +349,13 @@
         }
     });
     watchRefocus(() => {
-        if (getReloadState() && shouldAutoRefreshOnFocus()) {
+        if (getReloadState() && shouldAutoRefreshOnFocus() && ! isOffline()) {
             setLastAutoRefreshTime();
             waitThenReload();
         }
     });
     watchNetwork(() => {
-        if (getReloadState()) {
+        if (getReloadState() && ! isOffline()) {
             waitThenReload();
         }
     });
